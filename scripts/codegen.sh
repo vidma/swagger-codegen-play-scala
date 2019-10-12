@@ -18,6 +18,18 @@
 #
 
 set -o nounset -o errexit
+set -x
+
+realpath()
+{
+    if ! pushd $1 &> /dev/null; then
+        pushd ${1##*/} &> /dev/null
+        echo $( pwd -P )/${1%/*}
+    else
+        pwd -P
+    fi
+    popd > /dev/null
+}
 
 SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -25,7 +37,7 @@ source "$SCRIPTS_DIR/functions.sh"
 
 PID=$$
 TIMESTAMP=$(date +%s)
-PROJECT_DIR=$(readlink -f "$SCRIPTS_DIR/../")
+PROJECT_DIR=$(realpath "$SCRIPTS_DIR/../")
 STUB_DIR="${PROJECT_DIR}/clientstub/src/main/scala/com/mohiva/swagger/codegen"
 TMP_DIR="/tmp/swagger-play-scala-generator-$PID$TIMESTAMP"
 
@@ -47,12 +59,12 @@ cp ${STUB_DIR}/core/ApiRequest.scala ${TMP_DIR}/templates/apiRequest.mustache
 cp ${STUB_DIR}/core/ApiResponse.scala ${TMP_DIR}/templates/apiResponse.mustache
 
 # Replace the hardcoded package names with the variable package names
-sed -i "s/com.mohiva.swagger.codegen.core/{{invokerPackage}}/g" ${TMP_DIR}/templates/apiFile.mustache
-sed -i "s/com.mohiva.swagger.codegen.core/{{invokerPackage}}/g" ${TMP_DIR}/templates/apiConfig.mustache
-sed -i "s/com.mohiva.swagger.codegen.core/{{invokerPackage}}/g" ${TMP_DIR}/templates/apiImplicits.mustache
-sed -i "s/com.mohiva.swagger.codegen.core/{{invokerPackage}}/g" ${TMP_DIR}/templates/apiInvoker.mustache
-sed -i "s/com.mohiva.swagger.codegen.core/{{invokerPackage}}/g" ${TMP_DIR}/templates/apiRequest.mustache
-sed -i "s/com.mohiva.swagger.codegen.core/{{invokerPackage}}/g" ${TMP_DIR}/templates/apiResponse.mustache
+gsed -i "s/com.mohiva.swagger.codegen.core/{{invokerPackage}}/g" ${TMP_DIR}/templates/apiFile.mustache
+gsed -i "s/com.mohiva.swagger.codegen.core/{{invokerPackage}}/g" ${TMP_DIR}/templates/apiConfig.mustache
+gsed -i "s/com.mohiva.swagger.codegen.core/{{invokerPackage}}/g" ${TMP_DIR}/templates/apiImplicits.mustache
+gsed -i "s/com.mohiva.swagger.codegen.core/{{invokerPackage}}/g" ${TMP_DIR}/templates/apiInvoker.mustache
+gsed -i "s/com.mohiva.swagger.codegen.core/{{invokerPackage}}/g" ${TMP_DIR}/templates/apiRequest.mustache
+gsed -i "s/com.mohiva.swagger.codegen.core/{{invokerPackage}}/g" ${TMP_DIR}/templates/apiResponse.mustache
 
 # Compile the codegen module
 bash ${SCRIPTS_DIR}/sbt.sh codegen/compile
